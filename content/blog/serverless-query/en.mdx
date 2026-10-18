@@ -1,0 +1,17 @@
+---
+title: "Where Serverless Queries Spend Time"
+description: "Separate startup, scheduling, and execution before explaining latency."
+slug: serverless-query
+lang: en
+status: published
+date: "2026-10-19"
+tags: [Distributed systems]
+---
+
+## Start with a timeline
+
+A query may wait for capacity, initialize workers, read metadata, and then execute operators. These phases can overlap; summing independent measurements can double-count time.
+
+## Measure before concluding
+
+Record timestamps at clear boundaries and compare warm and cold runs separately. A faster operator does not necessarily improve end-to-end latency when startup dominates.

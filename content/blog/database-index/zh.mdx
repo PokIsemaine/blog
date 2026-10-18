@@ -1,0 +1,36 @@
+---
+title: "数据库索引如何工作"
+description: "通过交互实验理解数据库索引。"
+slug: database-index
+lang: zh
+status: published
+date: "2026-10-19"
+tags: [Databases, Fundamentals]
+---
+
+import { IndexDemo } from "@/components/interactive/index-demo";
+
+## 缩小搜索范围
+
+索引维护额外的访问结构，让查询不必检查每一行。代价是额外存储与写入开销。
+
+## 试着查找
+
+本模型包含从 1 到 1,024 的唯一整数键。顺序扫描在找到目标时停止；二分查找不断缩小有序数组的范围。拖动滑块，观察实际的键比较次数。
+
+<IndexDemo lang="zh" />
+
+## 从数组到数据库
+
+![索引将查询连接到数据页。](/index-path.svg)
+
+```sql
+CREATE INDEX orders_customer_idx ON orders (customer_id);
+SELECT * FROM orders WHERE customer_id = 42;
+```
+
+这个实验展示搜索范围的缩小，并非数据库 B 树的实现。真实索引需要访问页面，可能需要回表，还受缓存、选择性与查询优化器影响。当查询读取表的大部分数据时，扫描仍可能更合适。
+
+## 应当测量什么
+
+在实际工作负载下比较执行计划、读取页数和耗时。不要直接将上方的比较次数换算为延迟加速比。

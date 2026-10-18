@@ -1,0 +1,29 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  deterministic:
+    name: Deterministic checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run validate
+      - run: npm test
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm run test:export
+      - name: Verify project-site build
+        run: npm run build && npm run test:export
+        env:
+          NEXT_PUBLIC_BASE_PATH: /repository-test

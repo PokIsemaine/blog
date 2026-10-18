@@ -1,0 +1,50 @@
+name: Deploy Pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SITE_URL: ${{ vars.SITE_URL || format('https://{0}.github.io', github.repository_owner) }}
+      NEXT_PUBLIC_BASE_PATH: ${{ vars.PAGES_BASE_PATH }}
+      NEXT_PUBLIC_GISCUS_REPO: ${{ vars.GISCUS_REPO }}
+      NEXT_PUBLIC_GISCUS_REPO_ID: ${{ vars.GISCUS_REPO_ID }}
+      NEXT_PUBLIC_GISCUS_CATEGORY_ID: ${{ vars.GISCUS_CATEGORY_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/configure-pages@v5
+      - run: npm ci
+      - run: npm run format:check && npm run lint && npm test && npm run typecheck && npm run build && npm run test:export
+      - name: Custom domain
+        if: vars.CUSTOM_DOMAIN != ''
+        env:
+          CUSTOM_DOMAIN: ${{ vars.CUSTOM_DOMAIN }}
+        run: node -e "require('fs').writeFileSync('out/CNAME', process.env.CUSTOM_DOMAIN + '\n')"
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
