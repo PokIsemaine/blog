@@ -8,7 +8,15 @@ date: "2026-10-19"
 tags: [Databases, Fundamentals]
 ---
 
+import { TLDR } from "@/components/blog/tldr";
+
 import { IndexDemo } from "@/components/interactive/index-demo";
+
+<TLDR>
+  Indexes narrow the search space at the cost of storage and write overhead. The
+  interactive demo compares key comparisons, not database latency; evaluate real
+  indexes with query plans, pages read, and elapsed time.
+</TLDR>
 
 ## A smaller search space
 

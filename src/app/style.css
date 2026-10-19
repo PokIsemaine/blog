@@ -223,3 +223,21 @@ footer {
   border-radius: 4px;
   background: #eaf0e7;
 }
+
+.tldr {
+  margin: 0 0 36px;
+  padding: 22px 26px;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  background: #ecf2e8;
+}
+.tldr-title {
+  display: block;
+  color: var(--accent);
+  font-size: 13px;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+.tldr p {
+  margin: 0;
+}

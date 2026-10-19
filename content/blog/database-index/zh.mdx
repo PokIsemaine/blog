@@ -8,7 +8,13 @@ date: "2026-10-19"
 tags: [Databases, Fundamentals]
 ---
 
+import { TLDR } from "@/components/blog/tldr";
+
 import { IndexDemo } from "@/components/interactive/index-demo";
+
+<TLDR>
+  索引以额外存储和写入开销换取更小的搜索范围。交互实验比较的是键比较次数，而非数据库延迟；真实效果应结合执行计划、读取页数和耗时评估。
+</TLDR>
 
 ## 缩小搜索范围
 

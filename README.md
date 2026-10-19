@@ -131,3 +131,15 @@ The webpack build is explicit. On the tested Windows export, Next's client-route
 - `.github/workflows/`: deterministic CI, advisory review, Pages deployment.
 
 See `VERIFICATION.md` for the checks performed and external setup still outstanding.
+
+## Article TL;DR
+
+Place a short, source-faithful summary before the first section:
+
+```mdx
+import { TLDR } from "@/components/blog/tldr";
+
+<TLDR>The main result, its tradeoff, and the relevant limitation.</TLDR>
+```
+
+Write each translation's summary in its own language. The reusable component supplies a consistent accessible summary box.
