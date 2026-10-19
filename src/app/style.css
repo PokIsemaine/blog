@@ -202,3 +202,24 @@ footer {
   max-width: 100%;
   height: auto;
 }
+
+/* Fumadocs/Shiki emits theme colors as CSS variables. */
+.prose pre,
+.prose pre span {
+  color: var(--shiki-light, inherit);
+  background-color: var(--shiki-light-bg, transparent);
+}
+.prose pre {
+  background-color: var(--shiki-light-bg, #fff);
+  line-height: 1.7;
+  tab-size: 2;
+}
+.prose pre code {
+  font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+  font-size: inherit;
+}
+.prose :not(pre) > code {
+  padding: 0.15em 0.35em;
+  border-radius: 4px;
+  background: #eaf0e7;
+}
