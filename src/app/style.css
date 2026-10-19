@@ -19,7 +19,7 @@ a {
   color: var(--accent);
   text-underline-offset: 4px;
 }
-header {
+.site-header {
   max-width: 1160px;
   margin: auto;
   padding: 30px 32px;
@@ -28,7 +28,7 @@ header {
   gap: 28px;
   border-bottom: 1px solid #dce3da;
 }
-header span {
+.site-header span {
   color: var(--muted);
   font-size: 14px;
 }
@@ -42,7 +42,7 @@ nav {
   text-decoration: none;
   color: var(--ink);
 }
-main {
+.site-main {
   max-width: 1100px;
   margin: 65px auto;
   padding: 0 32px;
@@ -117,17 +117,6 @@ aside a {
 .prose h2 {
   margin-top: 45px;
 }
-.prose pre {
-  padding: 22px;
-  overflow: auto;
-  border: 1px solid #dce3da;
-  background: #fff;
-  border-radius: 8px;
-  font-size: 14px;
-}
-.prose code {
-  font-size: 0.9em;
-}
 .demo {
   padding: 25px;
   margin: 30px 0;
@@ -160,7 +149,7 @@ aside a {
   margin-top: 15px;
   color: var(--muted);
 }
-footer {
+.site-footer {
   max-width: 1100px;
   margin: 70px auto 0;
   padding: 25px 32px;
@@ -173,7 +162,7 @@ footer {
   border-top: 1px solid #dce3da;
 }
 @media (max-width: 700px) {
-  header span {
+  .site-header span {
     display: none;
   }
   .reading {
@@ -183,13 +172,13 @@ footer {
     position: static;
     margin-bottom: 30px;
   }
-  main {
+  .site-main {
     margin-top: 40px;
   }
   .metric {
     grid-template-columns: 110px 1fr 35px;
   }
-  header {
+  .site-header {
     gap: 10px;
     padding: 20px;
   }
@@ -201,45 +190,6 @@ footer {
 .prose img {
   max-width: 100%;
   height: auto;
-}
-
-/* Fumadocs/Shiki emits theme colors as CSS variables. */
-.prose pre,
-.prose pre span {
-  color: var(--shiki-light, inherit);
-  background-color: var(--shiki-light-bg, transparent);
-}
-.prose pre {
-  background-color: var(--shiki-light-bg, #fff);
-  line-height: 1.7;
-  tab-size: 2;
-}
-.prose pre code {
-  font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
-  font-size: inherit;
-}
-.prose :not(pre) > code {
-  padding: 0.15em 0.35em;
-  border-radius: 4px;
-  background: #eaf0e7;
-}
-
-.tldr {
-  margin: 0 0 36px;
-  padding: 22px 26px;
-  border-left: 3px solid var(--accent);
-  border-radius: 0 8px 8px 0;
-  background: #ecf2e8;
-}
-.tldr-title {
-  display: block;
-  color: var(--accent);
-  font-size: 13px;
-  letter-spacing: 1px;
-  margin-bottom: 8px;
-}
-.tldr p {
-  margin: 0;
 }
 
 button,
@@ -262,73 +212,6 @@ button {
   color: var(--muted);
   margin-left: 8px;
 }
-.search-dialog {
-  width: min(620px, calc(100% - 32px));
-  max-height: 80vh;
-  padding: 26px;
-  border: 1px solid #d0dbcf;
-  border-radius: 12px;
-  color: var(--ink);
-  background: #f8f9f5;
-  box-shadow: 0 20px 80px #192d2a30;
-}
-.search-dialog::backdrop {
-  background: #192d2a70;
-}
-.search-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 20px;
-}
-.search-heading h2 {
-  margin: 0;
-  font-size: 24px;
-}
-.search-heading button {
-  border: 0;
-  background: none;
-  padding: 8px;
-  color: var(--ink);
-}
-.search-label {
-  display: block;
-  font-size: 14px;
-  margin: 16px 0 8px;
-  color: var(--muted);
-}
-.search-dialog input {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #a9bead;
-  border-radius: 6px;
-  background: white;
-  color: var(--ink);
-}
-.search-status {
-  font-size: 14px;
-  color: var(--muted);
-}
-.search-results {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.search-results a {
-  display: block;
-  padding: 16px 12px;
-  border-top: 1px solid #dce3da;
-  text-decoration: none;
-}
-.search-results a:hover,
-.search-results a:focus-visible {
-  background: #ecf2e8;
-}
-.search-results p {
-  margin: 6px 0 0;
-  color: var(--muted);
-  font-size: 14px;
-}
 nav {
   align-items: center;
 }
@@ -343,4 +226,131 @@ nav {
     font-size: 14px;
     gap: 10px;
   }
+}
+
+:root {
+  --surface: #fff;
+  --soft: #ecf2e8;
+  --border: #dce3da;
+  --color-fd-primary: #146b52;
+  --color-fd-background: #f8f9f5;
+  --color-fd-foreground: #192d2a;
+  --color-fd-card: #fff;
+  --color-fd-muted: #ecf2e8;
+  --color-fd-muted-foreground: #60706c;
+  --color-fd-border: #dce3da;
+  --color-fd-accent: #ecf2e8;
+  --color-fd-accent-foreground: #192d2a;
+}
+.dark {
+  color-scheme: dark;
+  --ink: #e0e9e3;
+  --muted: #a4b5ab;
+  --accent: #80d4ad;
+  --surface: #1b2924;
+  --soft: #22372c;
+  --border: #35483e;
+  --color-fd-primary: #80d4ad;
+  --color-fd-background: #142019;
+  --color-fd-foreground: #e0e9e3;
+  --color-fd-card: #1b2924;
+  --color-fd-popover: #1b2924;
+  --color-fd-popover-foreground: #e0e9e3;
+  --color-fd-muted: #22372c;
+  --color-fd-muted-foreground: #a4b5ab;
+  --color-fd-border: #35483e;
+  --color-fd-accent: #22372c;
+  --color-fd-accent-foreground: #e0e9e3;
+}
+.dark body {
+  background: #142019;
+}
+.card,
+.search-trigger {
+  background: var(--surface);
+  border-color: var(--border);
+}
+.demo {
+  background: var(--soft);
+  border-color: var(--border);
+}
+.site-header,
+.site-footer,
+.comments {
+  border-color: var(--border);
+}
+.theme-toggle {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 2px 10px;
+}
+.article-toc a[data-active="true"] {
+  color: var(--accent);
+  font-weight: 700;
+}
+.article-toc a {
+  margin: 0;
+}
+.mobile-toc {
+  display: none;
+}
+.prose {
+  max-width: none;
+  color: var(--ink);
+  min-width: 0;
+}
+.prose figure pre {
+  border: 0;
+  border-radius: 0;
+  margin: 0;
+}
+.prose h2 a,
+.prose h3 a {
+  color: inherit;
+  text-decoration: none;
+}
+.prose h2,
+.prose h3 {
+  scroll-margin-top: 30px;
+}
+.tldr {
+  margin-top: 0;
+}
+.prose :where(h1, h2, h3, h4, h5, h6, strong) {
+  color: var(--ink);
+}
+@media (max-width: 700px) {
+  .article-toc {
+    display: none;
+  }
+  .mobile-toc {
+    display: block;
+    margin-bottom: 24px;
+  }
+  .site-header {
+    flex-wrap: wrap;
+  }
+  .site-header nav {
+    margin-left: auto;
+  }
+  .reading {
+    display: block;
+  }
+}
+
+.site-main {
+  width: 100%;
+  min-width: 0;
+}
+.site-header,
+.site-footer {
+  width: 100%;
+}
+.prose figure {
+  max-width: 100%;
+}
+.prose :where(pre) {
+  font-family: "Cascadia Code", Consolas, monospace;
 }

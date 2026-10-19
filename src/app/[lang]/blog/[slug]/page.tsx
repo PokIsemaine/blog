@@ -1,4 +1,6 @@
-import { ArticleImage } from "@/components/blog/article-image";
+import { mdxComponents } from "@/components/blog/mdx";
+import { ArticleTOC } from "@/components/blog/article-toc";
+import { DocsBody, EditOnGitHub } from "fumadocs-ui/layouts/docs/page";
 import Link from "@/components/blog/site-link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -55,20 +57,17 @@ export default async function Article({ params }: Props) {
           </span>
         )}
       </div>
-      <div className="reading">
-        <aside aria-label="Table of contents">
-          <strong>{lang === "en" ? "On this page" : "本文目录"}</strong>
-          {a.toc.map((t) => (
-            <a key={t.url} href={t.url}>
-              {t.title}
-            </a>
-          ))}
-        </aside>
-        <div className="prose">
-          <Body components={{ a: Link, img: ArticleImage }} />
+      <ArticleTOC toc={a.toc} lang={lang}>
+        <DocsBody>
+          <Body components={mdxComponents} />
+          <EditOnGitHub
+            href={`https://github.com/PokIsemaine/blog/edit/main/content/blog/${slug}/${lang}.mdx`}
+          >
+            {lang === "zh" ? "在 GitHub 上编辑" : "Edit on GitHub"}
+          </EditOnGitHub>
           <Comments articleId={slug} lang={lang} />
-        </div>
-      </div>
+        </DocsBody>
+      </ArticleTOC>
     </article>
   );
 }

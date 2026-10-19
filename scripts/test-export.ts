@@ -69,3 +69,6 @@ for (const route of routes) {
 console.log(
   `Verified ${routes.length} static pages, draft exclusion, links, assets and metadata at '${base || "/"}'.`,
 );
+
+const index = JSON.parse(await read("search-index.json"));
+assert.ok(index.type, "Fumadocs static search export missing");

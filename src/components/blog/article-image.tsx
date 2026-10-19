@@ -3,7 +3,7 @@ import type { ComponentProps } from "react";
 import { withBase } from "./site-link";
 type StaticImage = { src: string; width?: number; height?: number };
 type Props = Omit<ComponentProps<"img">, "src"> & {
-  src?: string | StaticImage;
+  src?: ComponentProps<"img">["src"] | StaticImage;
 };
 export function ArticleImage({
   src,
@@ -12,7 +12,7 @@ export function ArticleImage({
   height,
   ...props
 }: Props) {
-  const image = typeof src === "object" ? src : undefined;
+  const image = typeof src === "object" && "src" in src ? src : undefined;
   const path = typeof src === "string" ? src : image?.src;
   return (
     <img

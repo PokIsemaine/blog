@@ -1,6 +1,6 @@
 # Systems Notebook
 
-A Git-first, English-first technical publication. Next.js App Router renders Fumadocs MDX **at build time**. GitHub Pages serves only the resulting HTML, CSS, JavaScript and assets. There are no API routes, server actions, authentication services, or runtime application servers.
+A Git-first, English-first technical publication. Next.js App Router renders Fumadocs MDX **at build time**. GitHub Pages serves only the resulting HTML, CSS, JavaScript and assets. There are no runtime API routes, server actions, authentication services, or runtime application servers. The search-index route executes only during static export.
 
 ## Quick start
 
@@ -146,4 +146,25 @@ Write each translation's summary in its own language. The reusable component sup
 
 ## Search
 
-Use the header Search button or Ctrl/Cmd+K. Search runs entirely in the browser over published article titles, descriptions, tags, headings and paragraph text extracted by Fumadocs at build time. Results stay in the current language and prioritize title matches. Escape closes the dialog; results are keyboard-accessible links. Drafts are excluded using the same publication filter as routes. New content is indexed automatically on rebuild. Text rendered only inside interactive React components is not indexed. The compact index ships with the static page; for a much larger corpus, move it to a lazily fetched static index.
+Search uses Fumadocs Core's native ZBSearch engine and Fumadocs UI's accessible search dialog. Ctrl/Cmd+K opens it; arrow keys navigate results and Enter follows a result. The lazily downloaded `/search-index.json` contains only published articles and is generated **at build time** by a `force-static` route handler. GitHub Pages serves it as an ordinary JSON file; there is no runtime search API. Index URLs include the repository base path, locale filtering keeps languages separate, and matching prose/heading results link to their section anchors. Interactive component runtime output is not indexed.
+
+## Built-in Fumadocs authoring features
+
+The centralized `src/components/blog/mdx.tsx` mapping extends `fumadocs-ui/mdx`. Use these components directly in article MDX without repeating imports:
+
+- Code blocks: language-aware Shiki colors, copy buttons, filenames (`title="query.sql"`), highlighted lines (`{2}`), and framework typography.
+- Headings: permalink anchors, copy-anchor buttons and section search links.
+- Tables: native responsive overflow wrapper.
+- `Callout`: `title` and `type` (`info`, `warn`, `error`, `success`, `idea`). TL;DR reuses this component.
+- `Tabs` / `Tab`: `items={["SQL", "Python"]}` with a `<Tab>` per item.
+- `Steps` / `Step`: numbered workflows.
+- `Accordions` / `Accordion`: expandable details.
+- `Cards` / `Card` and code-block tabs are also included in the default MDX mapping.
+
+See `content/blog/writing-guide/en.mdx` and `zh.mdx` for working examples. **Keep blank lines between JSX tags and Markdown blocks** (headings, paragraphs, fenced code), including inside Tabs and Steps.
+
+The article page uses Fumadocs `DocsBody`, `EditOnGitHub`, its scroll-aware TOC primitives for desktop, and `InlineTOC` on mobile. A Fumadocs root provider manages search hotkeys, focus handling, localized UI, and persistent light/dark themes. The theme button toggles colors; `D` is the built-in theme shortcut. giscus follows the selected theme. The published blog homepage, translation identity and missing-translation behavior remain specific to this writing system.
+
+`fumadocs-ui/style.css` supplies the precompiled UI/theme styles, so this project does not need a separate Tailwind build pipeline. Fumadocs UI **16.17.5** exactly matches Core **16.17.5**. UI links use the existing static navigation adapter to avoid runtime RSC rewrite dependencies. A full documentation sidebar was deliberately not enabled for the small blog; native reader/authoring components are composed into the blog layout instead.
+
+Official references: [MDX code blocks](https://www.fumadocs.dev/docs/ui/components/codeblock), [search](https://www.fumadocs.dev/docs/search), [static builds](https://www.fumadocs.dev/docs/deploying/static), [inline TOC](https://www.fumadocs.dev/docs/ui/components/inline-toc).

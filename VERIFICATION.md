@@ -33,3 +33,15 @@ No Git remote, target repository, giscus IDs, domain, or LLM credentials were su
 - Custom-domain DNS, HTTPS provisioning, and Pages plan/visibility eligibility.
 
 The workflows and configuration are implemented; see README for exact setup steps and required variables/secrets. Require **Deterministic checks** in a branch rule to make failures block merges. AI review remains advisory.
+
+## Fumadocs UI integration update
+
+Fumadocs UI 16.17.5 is now paired with the same Core version. Native MDX code blocks, permalink headings, table wrappers, Callout/TL;DR, Tabs, Steps, Accordions, DocsBody and EditOnGitHub are integrated. Native desktop TOC tracking and mobile InlineTOC replace the manual list. Fumadocs RootProvider manages themes, hotkeys and translated UI.
+
+Search now uses Fumadocs ZBSearch and its accessible dialog instead of the handwritten matcher/dialog. `/search-index.json` is generated at build time, lazily fetched in the browser and locale-filtered. The build reports this endpoint as a static route. No runtime search server exists.
+
+Validation passed for seven published list/article pages and six source files (including the unpublished Chinese draft). Four tests cover metadata, the interactive model, AI review and native bilingual search/heading locations. Root and `/repository-test` static builds passed. The production dependency audit reports zero vulnerabilities; the previously documented development lint-chain advisory remains.
+
+Browser verification under `/repository-test` passed: native code-copy feedback, colored code tokens, Tabs selection, accordion expansion, active desktop TOC tracking, mobile expandable TOC, theme switching/persistence, English body search, Chinese search, keyboard result selection and heading-level navigation. Mobile 390px and desktop 1280px checks found no horizontal page overflow.
+
+The integration preserves the existing article URLs and giscus identity. A bilingual `writing-guide` article demonstrates working authoring patterns, including blank lines inside JSX for Markdown blocks. Live deployment status is available from GitHub Actions.

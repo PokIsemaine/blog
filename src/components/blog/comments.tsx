@@ -1,4 +1,5 @@
 "use client";
+import { useTheme } from "fumadocs-ui/provider/base";
 import Giscus from "@giscus/react";
 export function Comments({
   articleId,
@@ -7,6 +8,7 @@ export function Comments({
   articleId: string;
   lang: string;
 }) {
+  const { resolvedTheme } = useTheme();
   const repo = process.env.NEXT_PUBLIC_GISCUS_REPO;
   const repoId = process.env.NEXT_PUBLIC_GISCUS_REPO_ID;
   const categoryId = process.env.NEXT_PUBLIC_GISCUS_CATEGORY_ID;
@@ -35,7 +37,7 @@ export function Comments({
         reactionsEnabled="1"
         emitMetadata="0"
         inputPosition="top"
-        theme="light"
+        theme={resolvedTheme === "dark" ? "dark" : "light"}
         lang={lang === "zh" ? "zh-CN" : "en"}
         loading="lazy"
       />
