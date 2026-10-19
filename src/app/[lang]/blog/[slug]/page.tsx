@@ -9,7 +9,11 @@ import { absolute, articleUrl } from "@/lib/site";
 import { Comments } from "@/components/blog/comments";
 export const dynamicParams = false;
 export function generateStaticParams() {
-  return articles.map(({ lang, slug }) => ({ lang, slug }));
+  // Next static export requires a parameter even when the collection is empty.
+  // This reserved path renders notFound(), never a placeholder article.
+  return articles.length
+    ? articles.map(({ lang, slug }) => ({ lang, slug }))
+    : [{ lang: "en", slug: "_empty" }];
 }
 type Props = { params: Promise<{ lang: string; slug: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

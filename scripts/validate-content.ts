@@ -5,6 +5,7 @@ export async function validateContent(root = "content/blog") {
   let count = 0;
   const seen = new Set<string>();
   for (const dir of await readdir(root, { withFileTypes: true })) {
+    if (dir.name === ".gitkeep") continue;
     if (!dir.isDirectory()) throw new Error(`Unexpected file: ${dir.name}`);
     for (const file of await readdir(`${root}/${dir.name}`)) {
       if (!file.endsWith(".mdx")) throw new Error(`Unexpected file: ${file}`);

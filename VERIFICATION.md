@@ -45,3 +45,9 @@ Validation passed for seven published list/article pages and six source files (i
 Browser verification under `/repository-test` passed: native code-copy feedback, colored code tokens, Tabs selection, accordion expansion, active desktop TOC tracking, mobile expandable TOC, theme switching/persistence, English body search, Chinese search, keyboard result selection and heading-level navigation. Mobile 390px and desktop 1280px checks found no horizontal page overflow.
 
 The integration preserves the existing article URLs and giscus identity. A bilingual `writing-guide` article demonstrates working authoring patterns, including blank lines inside JSX for Markdown blocks. Live deployment status is available from GitHub Actions.
+
+## Empty content collection (2026-10-19)
+
+Removed all six existing MDX files, including drafts and translations. The content directory is retained with `.gitkeep`. Both language homepages display an empty state; reusable components, comments, search and publishing infrastructure remain. Next static export requires one parameter for dynamic routes, so an empty collection generates only a reserved `_empty` path rendering the not-found page.
+
+Validation: lint, formatting and all four unit tests passed. Root and repository-subpath static builds and export checks passed; old article paths are absent.

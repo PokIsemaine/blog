@@ -38,6 +38,13 @@ export default async function Index({
           ? "Technical essays, small experiments, and ideas you can take apart."
           : "技术文章、交互实验，以及可以拆解的想法。"}
       </p>
+      {!articles.some((a) => a.lang === lang) && (
+        <p>
+          {lang === "en"
+            ? "No articles published yet."
+            : "\u6682\u65e0\u5df2\u53d1\u5e03\u6587\u7ae0\u3002"}
+        </p>
+      )}
       <div className="articles">
         {articles
           .filter((a) => a.lang === lang)
@@ -52,7 +59,7 @@ export default async function Index({
           ))}
       </div>
       <p>
-        {lang === "zh" ? "部分文章尚未翻译。" : "Looking for another language?"}{" "}
+        {lang === "zh" ? "切换语言：" : "Looking for another language?"}{" "}
         <Link href={lang === "en" ? "/zh/" : "/en/"}>
           {lang === "zh" ? "浏览英文文章 →" : "浏览中文文章 →"}
         </Link>

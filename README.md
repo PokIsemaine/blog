@@ -161,7 +161,7 @@ The centralized `src/components/blog/mdx.tsx` mapping extends `fumadocs-ui/mdx`.
 - `Accordions` / `Accordion`: expandable details.
 - `Cards` / `Card` and code-block tabs are also included in the default MDX mapping.
 
-See `content/blog/writing-guide/en.mdx` and `zh.mdx` for working examples. **Keep blank lines between JSX tags and Markdown blocks** (headings, paragraphs, fenced code), including inside Tabs and Steps.
+Create articles in `content/blog/<slug>/en.mdx` and optionally `zh.mdx`; the repository starts with no published articles. **Keep blank lines between JSX tags and Markdown blocks** (headings, paragraphs, fenced code), including inside Tabs and Steps.
 
 The article page uses Fumadocs `DocsBody`, `EditOnGitHub`, its scroll-aware TOC primitives for desktop, and `InlineTOC` on mobile. A Fumadocs root provider manages search hotkeys, focus handling, localized UI, and persistent light/dark themes. The theme button toggles colors; `D` is the built-in theme shortcut. giscus follows the selected theme. The published blog homepage, translation identity and missing-translation behavior remain specific to this writing system.
 

@@ -8,7 +8,9 @@ const origin = (
 ).replace(/\/$/, "");
 const read = (p: string) => readFile(`out/${p}`, "utf8");
 const pages = [];
-for (const dir of await readdir("content/blog"))
+for (const dir of (await readdir("content/blog")).filter(
+  (name) => name !== ".gitkeep",
+))
   for (const file of await readdir(`content/blog/${dir}`)) {
     const a = articleSchema.parse(
       frontmatter(await readFile(`content/blog/${dir}/${file}`, "utf8")),
