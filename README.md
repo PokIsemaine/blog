@@ -143,3 +143,7 @@ import { TLDR } from "@/components/blog/tldr";
 ```
 
 Write each translation's summary in its own language. The reusable component supplies a consistent accessible summary box.
+
+## Search
+
+Use the header Search button or Ctrl/Cmd+K. Search runs entirely in the browser over published article titles, descriptions, tags, headings and paragraph text extracted by Fumadocs at build time. Results stay in the current language and prioritize title matches. Escape closes the dialog; results are keyboard-accessible links. Drafts are excluded using the same publication filter as routes. New content is indexed automatically on rebuild. Text rendered only inside interactive React components is not indexed. The compact index ships with the static page; for a much larger corpus, move it to a lazily fetched static index.
