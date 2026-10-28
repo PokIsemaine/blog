@@ -44,6 +44,20 @@ test("AI review uses scoped context, retries transient errors, redacts keys and 
     git("add", ".");
     git("commit", "--quiet", "-m", "article");
     const head = git("rev-parse", "HEAD");
+    await mkdir(join(dir, ".github/review-skills"), { recursive: true });
+    await writeFile(
+      join(dir, ".github/ai-review.json"),
+      JSON.stringify({
+        prompt: "CUSTOM_PROMPT",
+        skills: [".github/review-skills/test.md"],
+      }),
+    );
+    await writeFile(join(dir, ".github/review-skills/test.md"), "CUSTOM_SKILL");
+    await mkdir(join(dir, "review-rules"));
+    await writeFile(
+      join(dir, "review-rules/correctness.md"),
+      "RULE_SENTINEL: Check evidence.",
+    );
     const mock = join(dir, "mock.mjs");
     await writeFile(
       mock,
@@ -52,8 +66,9 @@ let calls=0;
 globalThis.fetch=async (url,init)=>{
  if(url.includes('/chat/completions')){
   calls++;if(calls===1)return new Response('',{status:429,headers:{'retry-after':'0.001'}});
+  if(process.env.AI_PROVIDER==='deepseek' && url!=='https://api.deepseek.com/chat/completions')throw Error('Wrong DeepSeek endpoint');
   writeFileSync('context.json',init.body);
-  return Response.json({choices:[{message:{content:JSON.stringify({findings:[{severity:'warning',file:process.env.INVALID_LOCATION?'outside.ts':'content/blog/post/en.mdx',line:1,explanation:'Leak '+process.env.AI_API_KEY,suggestion:'Clarify the claim.'}]})}}]});
+  return Response.json({choices:[{message:{content:JSON.stringify(process.env.INVALID_RESPONSE ? {结论:'approve',建议:'invalid'} : {结论:'reject',建议:[(process.env.INVALID_RULE==='missing' ? 'review-rules/missing.md' : 'review-rules/correctness.md')+'：'+(process.env.INVALID_RULE==='empty'?'':'content/blog/post/en.mdx:1 Leak '+process.env.AI_API_KEY+' Clarify the claim.')]})}}]});
  }
  if(init.method==='PATCH'){writeFileSync('posted.json',init.body);return Response.json({});}
  return Response.json([{id:42,user:{login:'github-actions[bot]'},body:'<!-- systems-notebook-ai-review --> old'}]);
@@ -81,20 +96,63 @@ globalThis.fetch=async (url,init)=>{
     const context = await readFile(join(dir, "context.json"), "utf8");
     assert.ok(context.includes("local interactive model"));
     assert.ok(context.includes("翻译"));
+    assert.ok(context.includes("CUSTOM_PROMPT"));
+    assert.ok(context.includes("CUSTOM_SKILL"));
+    assert.ok(context.includes("RULE_SENTINEL"));
     assert.ok(!context.includes("UNRELATED_SENTINEL"));
     const posted = await readFile(join(dir, "posted.json"), "utf8");
     assert.ok(posted.includes("[REDACTED]"));
     assert.ok(!posted.includes("fake-test-key"));
+    const comment = JSON.parse(posted).body;
+    const review = JSON.parse(comment.split("```json\n")[1].split("\n```")[0]);
+    assert.equal(review.结论, "reject");
+    assert.equal(review.建议.length, 1);
     result = spawnSync(
       process.execPath,
       ["--import", tsx, "--import", pathToFileURL(mock).href, runner],
-      { cwd: dir, env: { ...env, INVALID_LOCATION: "1" }, encoding: "utf8" },
+      {
+        cwd: dir,
+        env: { ...env, AI_PROVIDER: "deepseek", AI_BASE_URL: "" },
+        encoding: "utf8",
+      },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    result = spawnSync(
+      process.execPath,
+      ["--import", tsx, "--import", pathToFileURL(mock).href, runner],
+      { cwd: dir, env: { ...env, INVALID_RESPONSE: "1" }, encoding: "utf8" },
     );
     assert.equal(result.status, 1);
     assert.ok(
       (await readFile(join(dir, "ai-review.md"), "utf8")).includes(
         "unavailable",
       ),
+    );
+    for (const invalid of ["missing", "empty"]) {
+      result = spawnSync(
+        process.execPath,
+        ["--import", tsx, "--import", pathToFileURL(mock).href, runner],
+        { cwd: dir, env: { ...env, INVALID_RULE: invalid }, encoding: "utf8" },
+      );
+      assert.equal(
+        result.status,
+        1,
+        "Reject unknown or empty rule suggestions",
+      );
+    }
+    await writeFile(
+      join(dir, ".github/ai-review.json"),
+      JSON.stringify({ skills: ["../outside.md"] }),
+    );
+    result = spawnSync(
+      process.execPath,
+      ["--import", tsx, "--import", pathToFileURL(mock).href, runner],
+      { cwd: dir, env, encoding: "utf8" },
+    );
+    assert.equal(
+      result.status,
+      1,
+      "Reject skills outside the trusted checkout",
     );
   } finally {
     await rm(dir, { recursive: true, force: true });

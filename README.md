@@ -100,13 +100,17 @@ These IDs are public, not credentials. The widget uses **specific** mapping with
 
 - Add Actions **secret** `AI_API_KEY`.
 - Set Actions **variable** `AI_MODEL` to a model supported by your chosen provider.
-- Optional `AI_PROVIDER`: `openai-compatible` (default) or `anthropic`.
+- Optional `AI_PROVIDER`: `openai-compatible` (default), `deepseek`, or `anthropic`.
 - Optional `AI_BASE_URL`: HTTPS API prefix such as `https://api.openai.com/v1`, an OpenAI-compatible provider's endpoint, or `https://api.anthropic.com/v1`.
 - Permit the workflow's `issues: write` permission for its single PR conversation comment. No personal access token is required.
 
+For DeepSeek, configure secret `AI_API_KEY`, variable `AI_PROVIDER=deepseek`, and `AI_MODEL` with an available model (for example `deepseek-flash`). Leave `AI_BASE_URL` unset to use `https://api.deepseek.com`. The adapter uses the [documented JSON Output mode](https://api-docs.deepseek.com/guides/json_mode/).
+
+Customize `.github/ai-review.json` with `prompt` (review instructions) and `skills` (repository-relative Markdown paths, including `SKILL.md`). The default skill is `.github/review-skills/technical-writing.md`. Variable `AI_REVIEW_CONFIG` optionally selects another config. Skills are read as instructions, not executed; referenced files are not recursively loaded. Skill paths must resolve inside the checkout. Config is strictly validated; total guidance is capped at 32,000 characters. The fixed JSON contract takes precedence. Config and skills are loaded from the trusted base checkout, so PR edits take effect after merging. Suggestions are returned in Chinese as separate JSON array entries.
+
 OpenAI-compatible providers must implement chat completions and JSON response format; Anthropic uses its Messages API adapter. Provider/model availability, account billing and article-sharing approval are the repository owner's responsibility.
 
-The reviewer checks the base/head diff, changed MDX, sibling translations and explicitly imported interactive modules (including a local `.ts` model). Component-only edits directly referenced by an article also trigger review. Import discovery is deliberately bounded, not a whole-program dependency analyzer; indirect dependency changes may need a small related article change to trigger review. Findings contain severity, exact file/line, an explanation and a suggested fix. JSON shape and supplied locations are validated. The reviewer caps total supplied text at about 75,000 characters and each file at 18,000, marks incomplete context, retries transient API failures, and sets request timeouts. Large changes should be split into smaller PRs. AI technical assessments remain fallible.
+The reviewer checks the base/head diff, changed MDX, sibling translations and explicitly imported interactive modules (including a local `.ts` model). Component-only edits directly referenced by an article also trigger review. Import discovery is deliberately bounded, not a whole-program dependency analyzer; indirect dependency changes may need a small related article change to trigger review. Responses must match exactly `{"结论":"ac" | "reject","建议":["review-rules/evidence.md：file:line — issue and concrete fix"]}`. Strict validation rejects unknown keys, invalid verdicts, empty suggestion strings and rejection without suggestions. The validated JSON is posted in the PR conversation comment. Verdicts are advisory; they do not approve, close or merge PRs. The reviewer caps total supplied text at about 75,000 characters and each file at 18,000, marks incomplete context, retries transient API failures, and sets request timeouts. Large changes should be split into smaller PRs. AI technical assessments remain fallible.
 
 One bot-authored comment is updated by a stable marker instead of repeatedly posting; the same content is written to the Actions summary. Missing API credentials explicitly report a skipped review. API/configuration/invalid-output failures explicitly report unavailable review and fail the advisory step; job-level `continue-on-error` leaves deterministic CI independent. Logs suppress API bodies and redact the API key from findings. Do not store credentials in content files.
 
@@ -168,3 +172,20 @@ The article page uses Fumadocs `DocsBody`, `EditOnGitHub`, its scroll-aware TOC 
 `fumadocs-ui/style.css` supplies the precompiled UI/theme styles, so this project does not need a separate Tailwind build pipeline. Fumadocs UI **16.17.5** exactly matches Core **16.17.5**. UI links use the existing static navigation adapter to avoid runtime RSC rewrite dependencies. A full documentation sidebar was deliberately not enabled for the small blog; native reader/authoring components are composed into the blog layout instead.
 
 Official references: [MDX code blocks](https://www.fumadocs.dev/docs/ui/components/codeblock), [search](https://www.fumadocs.dev/docs/search), [static builds](https://www.fumadocs.dev/docs/deploying/static), [inline TOC](https://www.fumadocs.dev/docs/ui/components/inline-toc).
+
+### Review rules
+
+Each Markdown file in the root `review-rules/` directory defines one rule. Files named with letters, digits, hyphens or underscores and a `.md` extension are automatically loaded from the trusted base checkout, in filename order. Add or edit a rule file to customize review criteria; no config registration is required. At least one rule is required. Rules and skills share the 32,000-character guidance limit.
+
+Every suggestion must use `review-rules/<filename>.md：具体建议`, with the full-width colon and a nonempty description. Validation rejects missing or unknown rule paths and empty descriptions. For example:
+
+```json
+{
+  "结论": "reject",
+  "建议": [
+    "review-rules/evidence.md：content/blog/example/zh.mdx:12，将单一工作负载的结果推广到所有场景；请补充测试条件并收窄结论。"
+  ]
+}
+```
+
+This validates rule references and output structure; whether a suggestion semantically matches its rule remains an AI assessment.
