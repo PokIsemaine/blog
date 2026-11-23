@@ -69,6 +69,21 @@ async function loadGuidance() {
 const git = (...args: string[]) =>
   execFileSync("git", args, { encoding: "utf8", maxBuffer: 4 * 1024 * 1024 });
 const marker = "<!-- systems-notebook-ai-review -->";
+class RequestFailure extends Error {
+  constructor(
+    readonly operation: string,
+    readonly status?: number,
+    readonly requestId?: string,
+    readonly network = false,
+  ) {
+    super(operation);
+  }
+}
+class ValidationFailure extends Error {
+  constructor() {
+    super("response validation");
+  }
+}
 const safePath = (s: string) =>
   /^(content\/blog\/|src\/components\/interactive\/)[a-zA-Z0-9_./-]+\.(mdx|tsx?|jsx?)$/.test(
     s,
@@ -79,7 +94,7 @@ const clean = (s: string) =>
     .replace(/@/g, "＠")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
-async function request(url: string, init: RequestInit) {
+async function request(url: string, init: RequestInit, operation: string) {
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const r = await fetch(url, {
@@ -87,9 +102,18 @@ async function request(url: string, init: RequestInit) {
         signal: AbortSignal.timeout(60000),
       });
       if (r.ok) return r;
-      if (r.status !== 429 && r.status < 500)
-        throw new Error("Non-retryable API response");
-      if (attempt === 2) throw new Error("API retry limit");
+      const rawRequestId = r.headers.get("x-github-request-id");
+      const requestId =
+        rawRequestId &&
+        /^[a-zA-Z0-9:-]{1,128}$/.test(rawRequestId) &&
+        ![env.AI_API_KEY, env.GITHUB_TOKEN].some(
+          (secret) => secret && rawRequestId.includes(secret),
+        )
+          ? rawRequestId
+          : undefined;
+      const retryable = r.status === 429 || r.status >= 500;
+      if (!retryable || attempt === 2)
+        throw new RequestFailure(operation, r.status, requestId);
       const seconds = Number(r.headers.get("retry-after"));
       await new Promise((r) =>
         setTimeout(
@@ -99,13 +123,14 @@ async function request(url: string, init: RequestInit) {
             : 1000 * 2 ** attempt,
         ),
       );
-    } catch {
+    } catch (error) {
+      if (error instanceof RequestFailure) throw error;
       if (attempt === 2)
-        throw new Error("API unavailable or response rejected");
+        throw new RequestFailure(operation, undefined, undefined, true);
       await new Promise((r) => setTimeout(r, 1000 * 2 ** attempt));
     }
   }
-  throw new Error("API unavailable");
+  throw new RequestFailure(operation, undefined, undefined, true);
 }
 async function run() {
   const base = env.BASE_SHA,
@@ -288,26 +313,36 @@ async function run() {
       response_format: { type: "json_object" },
     };
   } else throw new Error("Unsupported AI_PROVIDER");
-  const r = await request(endpoint.toString().replace(/\/$/, "") + suffix, {
-    method: "POST",
-    headers: { ...headers, "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  const data = await r.json();
-  const raw =
-    provider === "anthropic"
-      ? data.content?.find((x: { type: string }) => x.type === "text")?.text
-      : data.choices?.[0]?.message?.content;
-  const review = responseSchema.parse(JSON.parse(raw));
-  for (const suggestion of review.建议) {
-    if (
-      !guidance.ruleIds.some(
-        (id) =>
-          suggestion.startsWith(`${id}：`) &&
-          suggestion.slice(id.length + 1).trim().length > 0,
+  let review;
+  try {
+    const r = await request(
+      endpoint.toString().replace(/\/$/, "") + suffix,
+      {
+        method: "POST",
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      },
+      "model request",
+    );
+    const data = await r.json();
+    const raw =
+      provider === "anthropic"
+        ? data.content?.find((x: { type: string }) => x.type === "text")?.text
+        : data.choices?.[0]?.message?.content;
+    review = responseSchema.parse(JSON.parse(raw));
+    for (const suggestion of review.建议) {
+      if (
+        !guidance.ruleIds.some(
+          (id) =>
+            suggestion.startsWith(`${id}：`) &&
+            suggestion.slice(id.length + 1).trim().length > 0,
+        )
       )
-    )
-      throw new Error("Suggestion must reference a supplied review rule");
+        throw new Error("invalid suggestion");
+    }
+  } catch (error) {
+    if (error instanceof RequestFailure) throw error;
+    throw new ValidationFailure();
   }
   const body =
     `Advisory AI review · ${head.slice(0, 7)}\n\n${omitted ? "Context was truncated or omitted; this is a partial review.\n\n" : ""}` +
@@ -344,12 +379,29 @@ async function publish(body: string) {
     const r = await request(
       `${root}/issues/${env.PR_NUMBER}/comments?per_page=100&page=${page}`,
       { headers },
+      "GitHub query comments",
     );
-    const comments = (await r.json()) as {
+    let comments: {
       id: number;
       body: string;
       user: { login: string };
     }[];
+    try {
+      comments = z
+        .array(
+          z.object({
+            id: z.number(),
+            body: z.string(),
+            user: z.object({ login: z.string() }),
+          }),
+        )
+        .parse(await r.json());
+    } catch {
+      throw new RequestFailure(
+        "GitHub query comments response validation",
+        r.status,
+      );
+    }
     existing = comments.find(
       (c) => c.user.login === "github-actions[bot]" && c.body.includes(marker),
     )?.id;
@@ -364,16 +416,36 @@ async function publish(body: string) {
       headers,
       body: JSON.stringify({ body: bounded }),
     },
+    existing ? "GitHub update comment" : "GitHub create comment",
   );
+}
+async function appendSummary(message: string) {
+  if (env.GITHUB_STEP_SUMMARY)
+    await appendFile(env.GITHUB_STEP_SUMMARY, `\n${message}\n`);
+}
+function diagnostic(error: unknown) {
+  if (error instanceof RequestFailure) {
+    if (error.network) return `stage=${error.operation} category=network_error`;
+    return `stage=${error.operation} status=${error.status} request_id=${error.requestId || "unavailable"}`;
+  }
+  if (error instanceof ValidationFailure) return "stage=response validation";
+  return "stage=review setup";
 }
 try {
   await run();
-} catch {
-  await publish(
-    "AI review unavailable: API, configuration, context, or response validation failed. See the workflow outcome; deterministic checks remain required.",
-  ).catch(() => {});
-  console.error(
-    "AI review failed; diagnostic details suppressed to protect credentials and article context.",
-  );
+} catch (error) {
+  if (
+    error instanceof RequestFailure &&
+    error.operation.startsWith("GitHub ")
+  ) {
+    await appendSummary(
+      "AI review comment publication failed; the generated review above is retained.",
+    ).catch(() => {});
+  } else {
+    await writeReport(
+      `${marker}\nAI review unavailable: model request, configuration, context, or response validation failed. Deterministic checks remain required.`,
+    ).catch(() => {});
+  }
+  console.error(`AI review failed: ${diagnostic(error)}`);
   process.exitCode = 1;
 }
