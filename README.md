@@ -39,25 +39,40 @@ Remove-Item Env:NEXT_PUBLIC_SITE_URL
 
 ## Write and publish
 
-Create `content/blog/<stable-id>/en.mdx`. Translations live beside it as `zh.mdx` and use the **same slug**. A slug is both URL identity and discussion identity: treat it as permanent. No requirement couples publication status across languages.
+The public site is English-first, but new articles start with **one Chinese draft** by default. The repository-local agent skill is `.agents/skills/blog-writing/SKILL.md`; `AGENTS.md` points agents to it.
+
+The default authoring sequence is:
+
+1. Read this section, the TL;DR and authoring-feature sections below, and every rule in `review-rules/`. Check an existing article for frontmatter and MDX conventions.
+2. Confirm the stable slug, audience, one main conclusion, evidence, and scope before drafting.
+3. Create only `content/blog/<stable-id>/zh.mdx` with `lang: zh` and `status: draft`.
+4. Run the validation checks and get author feedback on the Chinese draft.
+5. After the Chinese draft is settled, create `en.mdx` with the same slug and translate by meaning.
+6. Publish only with explicit approval.
+
+Do not create Chinese and English drafts in one pass. If the author explicitly asks for English-first drafting, follow that request.
+
+An article lives at `content/blog/<stable-id>/{zh,en}.mdx`, where both files use the **same slug**. A slug is both URL identity and discussion identity: treat it as permanent. No requirement couples publication status across languages.
 
 ```mdx
 ---
-title: "How a Buffer Pool Works"
-description: "Follow a page through an in-memory cache."
+title: "缓冲池如何工作"
+description: "跟随一个页面穿过内存缓存。"
 slug: buffer-pool
-lang: en
-status: published
+lang: zh
+status: draft
 date: "2026-10-19"
 tags: [Databases]
 ---
 
 import { IndexDemo } from "@/components/interactive/index-demo";
 
-## A small experiment
+## 一个小实验
 
 <IndexDemo />
 ```
+
+The example shows the default Chinese draft. For `en.mdx`, keep the same metadata shape with `lang: en` and English `title` and `description`.
 
 All metadata fields above except tags are required; date must be a quoted, valid ISO calendar date. Slug and language must match directory and filename. `status: draft` excludes a document from public routes, lists and alternate metadata. Dates are editorial dates, not a scheduling mechanism. Drafts still must compile and have valid metadata. Drafts are **not a confidentiality boundary**: keep confidential writing outside a public repository.
 
@@ -135,7 +150,7 @@ The webpack build is explicit. On the tested Windows export, Next's client-route
 - `src/components/interactive/`: browser demos and reusable models.
 - `scripts/`: content/export validation, tests, AI review.
 - `.github/workflows/`: deterministic CI, advisory review, Pages deployment.
-- `.agents/skills/`: repository-scoped Codex workflows, including knowledge-gap issue capture.
+- `.agents/skills/`: repository-scoped Codex workflows, including blog drafting and knowledge-gap issue capture.
 
 See `VERIFICATION.md` for the checks performed and external setup still outstanding.
 
@@ -172,7 +187,7 @@ The centralized `src/components/blog/mdx.tsx` mapping extends `fumadocs-ui/mdx`.
 - `Accordions` / `Accordion`: expandable details.
 - `Cards` / `Card` and code-block tabs are also included in the default MDX mapping.
 
-Create articles in `content/blog/<slug>/en.mdx` and optionally `zh.mdx`; the repository starts with no published articles. **Keep blank lines between JSX tags and Markdown blocks** (headings, paragraphs, fenced code), including inside Tabs and Steps.
+Create the Chinese draft in `content/blog/<slug>/zh.mdx` first, then add `en.mdx` after the Chinese draft is settled; the repository starts with no published articles. **Keep blank lines between JSX tags and Markdown blocks** (headings, paragraphs, fenced code), including inside Tabs and Steps.
 
 The article page uses Fumadocs `DocsBody`, `EditOnGitHub`, its scroll-aware TOC primitives for desktop, and `InlineTOC` on mobile. A Fumadocs root provider manages search hotkeys, focus handling, localized UI, and persistent light/dark themes. The theme button toggles colors; `D` is the built-in theme shortcut. giscus follows the selected theme. The published blog homepage, translation identity and missing-translation behavior remain specific to this writing system.
 
