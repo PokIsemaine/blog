@@ -135,6 +135,7 @@ The webpack build is explicit. On the tested Windows export, Next's client-route
 - `src/components/interactive/`: browser demos and reusable models.
 - `scripts/`: content/export validation, tests, AI review.
 - `.github/workflows/`: deterministic CI, advisory review, Pages deployment.
+- `.agents/skills/`: repository-scoped Codex workflows, including knowledge-gap issue capture.
 
 See `VERIFICATION.md` for the checks performed and external setup still outstanding.
 
@@ -149,6 +150,10 @@ import { TLDR } from "@/components/blog/tldr";
 ```
 
 Write each translation's summary in its own language. The reusable component supplies a consistent accessible summary box.
+
+## Knowledge-gap issues
+
+The project skill `.agents/skills/knowledge-gap-issue/SKILL.md` turns a durable "I don't understand X" moment into a GitHub issue for later writing. It first distinguishes a concept that belongs in the current article from one that needs a standalone systematic introduction, then checks existing issues and articles for duplicates. Only the standalone case becomes an issue. Invoke it as `$knowledge-gap-issue` or let Codex discover it from the repository.
 
 ## Search
 
