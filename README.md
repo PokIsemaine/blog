@@ -135,7 +135,7 @@ One bot-authored comment is updated by a stable marker instead of repeatedly pos
 
 ## Compatibility and implementation notes
 
-Locked versions: Next.js **16.4.2**, Fumadocs MDX **15.4.7**, Fumadocs Core **16.17.5**, React **19.3.1**, TypeScript **6.0.3**. Node **24** is used locally and in CI. `package-lock.json` locks the full graph; use `npm ci`.
+Locked versions: Next.js **16.4.6**, Fumadocs MDX **15.4.7**, Fumadocs Core **16.17.5**, React **19.3.1**, TypeScript **6.0.3**. Node **24** is used locally and in CI. `package-lock.json` locks the full graph; use `npm ci`.
 
 Official [Next.js static-export documentation](https://nextjs.org/docs/app/guides/static-exports) and [Fumadocs static-build documentation](https://www.fumadocs.dev/docs/deploying/static) explicitly support this deployment model. [Fumadocs Next.js integration](https://www.fumadocs.dev/docs/mdx/next) supplies the build plugin. Generated route parameters cover all public pages, and unknown dynamic parameters are disabled. No hosting substitution was made.
 
