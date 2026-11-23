@@ -9,6 +9,75 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const runner = resolve("scripts/ai-review.ts");
 const tsx = pathToFileURL(require.resolve("tsx")).href;
+for (const apiKey of ["fake-test-key", ""]) {
+  test(`AI review skips rules/config/docs-only changes without external requests (${apiKey ? "with" : "without"} API key)`, async () => {
+    const dir = await mkdtemp(join(tmpdir(), "writing-review-skip-"));
+    try {
+      const git = (...args: string[]) =>
+        execFileSync("git", args, { cwd: dir, encoding: "utf8" }).trim();
+      git("init", "--quiet");
+      git("config", "user.name", "Test");
+      git("config", "user.email", "test@example.com");
+      await mkdir(join(dir, "content/blog/post"), { recursive: true });
+      await writeFile(
+        join(dir, "content/blog/post/en.mdx"),
+        "Unchanged article.",
+      );
+      git("add", ".");
+      git("commit", "--quiet", "-m", "base");
+      const base = git("rev-parse", "HEAD");
+      await mkdir(join(dir, "review-rules"));
+      await mkdir(join(dir, ".github"));
+      await writeFile(
+        join(dir, "review-rules/correctness.md"),
+        "Check evidence.",
+      );
+      await writeFile(join(dir, ".github/ai-review.json"), "{}");
+      await writeFile(join(dir, "README.md"), "Updated review documentation.");
+      git("add", ".");
+      git("commit", "--quiet", "-m", "rules and documentation");
+      const head = git("rev-parse", "HEAD");
+      const mock = join(dir, "mock.mjs");
+      await writeFile(
+        mock,
+        `import { appendFileSync } from 'node:fs';
+globalThis.fetch = async (url) => {
+  appendFileSync('requests.log', String(url) + '\\n');
+  throw new Error('External requests must not occur for skipped reviews');
+};`,
+      );
+      await writeFile(join(dir, "requests.log"), "");
+      const result = spawnSync(
+        process.execPath,
+        ["--import", tsx, "--import", pathToFileURL(mock).href, runner],
+        {
+          cwd: dir,
+          env: {
+            ...process.env,
+            AI_API_KEY: apiKey,
+            GITHUB_TOKEN: "fake-github",
+            GITHUB_REPOSITORY: "owner/repo",
+            PR_NUMBER: "11",
+            PR_BODY: "Rules, configuration and documentation only.",
+            BASE_SHA: base,
+            HEAD_SHA: head,
+            GITHUB_STEP_SUMMARY: join(dir, "summary.md"),
+          },
+          encoding: "utf8",
+          timeout: 30000,
+        },
+      );
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(await readFile(join(dir, "requests.log"), "utf8"), "");
+      assert.match(
+        await readFile(join(dir, "summary.md"), "utf8"),
+        /No changed articles or directly dependent articles to review\./,
+      );
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+}
 test("AI review uses scoped context, retries transient errors, redacts keys and updates its own comment", async () => {
   const dir = await mkdtemp(join(tmpdir(), "writing-review-"));
   try {

@@ -108,27 +108,6 @@ async function request(url: string, init: RequestInit) {
   throw new Error("API unavailable");
 }
 async function run() {
-  if (issueLinkStatus(env.PR_BODY) === "missing") {
-    const revision = env.HEAD_SHA?.slice(0, 7) || "issue-link";
-    await publish(
-      `Advisory AI review · ${revision}\n\n` +
-        "PR description must link an issue.\n\n" +
-        "```json\n" +
-        JSON.stringify(
-          { 结论: "reject", 建议: [clean(issueLinkSuggestion())] },
-          null,
-          2,
-        ) +
-        "\n```",
-    );
-    return;
-  }
-  if (!env.AI_API_KEY) {
-    await publish(
-      "AI review skipped: AI_API_KEY is not configured. Deterministic checks run separately.",
-    );
-    return;
-  }
   const base = env.BASE_SHA,
     head = env.HEAD_SHA;
   if (
@@ -170,8 +149,29 @@ async function run() {
       mdx.push(f);
   }
   if (!mdx.length) {
-    await publish(
+    await writeReport(
       "No changed articles or directly dependent articles to review.",
+    );
+    return;
+  }
+  if (issueLinkStatus(env.PR_BODY) === "missing") {
+    const revision = head.slice(0, 7);
+    await publish(
+      `Advisory AI review · ${revision}\n\n` +
+        "PR description must link an issue.\n\n" +
+        "```json\n" +
+        JSON.stringify(
+          { 结论: "reject", 建议: [clean(issueLinkSuggestion())] },
+          null,
+          2,
+        ) +
+        "\n```",
+    );
+    return;
+  }
+  if (!env.AI_API_KEY) {
+    await publish(
+      "AI review skipped: AI_API_KEY is not configured. Deterministic checks run separately.",
     );
     return;
   }
@@ -323,11 +323,15 @@ async function run() {
     "\n```";
   await publish(body);
 }
-async function publish(body: string) {
+async function writeReport(body: string) {
   const bounded = `${marker}\n${body}`.slice(0, 60000);
   await writeFile("ai-review.md", bounded);
   if (env.GITHUB_STEP_SUMMARY)
     await appendFile(env.GITHUB_STEP_SUMMARY, bounded + "\n");
+  return bounded;
+}
+async function publish(body: string) {
+  const bounded = await writeReport(body);
   if (!env.GITHUB_TOKEN || !env.GITHUB_REPOSITORY || !env.PR_NUMBER) return;
   const root = `https://api.github.com/repos/${env.GITHUB_REPOSITORY}`;
   const headers = {
