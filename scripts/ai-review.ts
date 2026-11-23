@@ -8,6 +8,7 @@ import {
 } from "node:fs/promises";
 import { resolve, relative, isAbsolute, sep } from "node:path";
 import { z } from "zod";
+import { issueLinkStatus, issueLinkSuggestion } from "./pr-policy";
 const env = process.env;
 const responseSchema = z
   .strictObject({
@@ -107,6 +108,21 @@ async function request(url: string, init: RequestInit) {
   throw new Error("API unavailable");
 }
 async function run() {
+  if (issueLinkStatus(env.PR_BODY) === "missing") {
+    const revision = env.HEAD_SHA?.slice(0, 7) || "issue-link";
+    await publish(
+      `Advisory AI review · ${revision}\n\n` +
+        "PR description must link an issue.\n\n" +
+        "```json\n" +
+        JSON.stringify(
+          { 结论: "reject", 建议: [clean(issueLinkSuggestion())] },
+          null,
+          2,
+        ) +
+        "\n```",
+    );
+    return;
+  }
   if (!env.AI_API_KEY) {
     await publish(
       "AI review skipped: AI_API_KEY is not configured. Deterministic checks run separately.",

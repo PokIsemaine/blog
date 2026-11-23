@@ -83,6 +83,7 @@ globalThis.fetch=async (url,init)=>{
       GITHUB_TOKEN: "fake-github",
       GITHUB_REPOSITORY: "owner/repo",
       PR_NUMBER: "1",
+      PR_BODY: "Closes #3",
       BASE_SHA: base,
       HEAD_SHA: head,
       GITHUB_STEP_SUMMARY: join(dir, "summary.md"),
@@ -107,6 +108,27 @@ globalThis.fetch=async (url,init)=>{
     const review = JSON.parse(comment.split("```json\n")[1].split("\n```")[0]);
     assert.equal(review.结论, "reject");
     assert.equal(review.建议.length, 1);
+    await rm(join(dir, "context.json"), { force: true });
+    result = spawnSync(
+      process.execPath,
+      ["--import", tsx, "--import", pathToFileURL(mock).href, runner],
+      {
+        cwd: dir,
+        env: { ...env, PR_BODY: "No issue link." },
+        encoding: "utf8",
+      },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(
+      await readFile(join(dir, "context.json"), "utf8").catch(() => null),
+      null,
+      "Issue-link rejection must not call the AI",
+    );
+    const issueComment = JSON.parse(
+      await readFile(join(dir, "posted.json"), "utf8"),
+    ).body;
+    assert.ok(issueComment.includes("review-rules/pr-issue-link.md"));
+    assert.ok(issueComment.includes('"结论": "reject"'));
     result = spawnSync(
       process.execPath,
       ["--import", tsx, "--import", pathToFileURL(mock).href, runner],

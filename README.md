@@ -96,13 +96,15 @@ These IDs are public, not credentials. The widget uses **specific** mapping with
 
 ## Advisory AI review
 
-`ai-review.yml` runs on PR creation, updates, reopening and ready-for-review. It is separate from deterministic CI and never edits article files or blocks the build. Setup:
+`ai-review.yml` runs on PR creation, updates, reopening, ready-for-review and description edits. It is separate from deterministic CI and never edits article files or blocks the build. Setup:
 
 - Add Actions **secret** `AI_API_KEY`.
 - Set Actions **variable** `AI_MODEL` to a model supported by your chosen provider.
 - Optional `AI_PROVIDER`: `openai-compatible` (default), `deepseek`, or `anthropic`.
 - Optional `AI_BASE_URL`: HTTPS API prefix such as `https://api.openai.com/v1`, an OpenAI-compatible provider's endpoint, or `https://api.anthropic.com/v1`.
 - Permit the workflow's `issues: write` permission for its single PR conversation comment. No personal access token is required.
+
+Every reviewed PR must link an issue in its description. The workflow reads the PR body from the event and accepts `#123`, `owner/repo#123`, or a full GitHub issue URL outside fenced code, inline code and HTML comments. A missing or empty description returns `reject` with `review-rules/pr-issue-link.md` before content review; editing the description reruns the check. This is a deterministic check inside the advisory workflow, so it adds no required branch-protection status and remains skipped for fork and Dependabot PRs. Local runs without `PR_BODY` skip the check.
 
 For DeepSeek, configure secret `AI_API_KEY`, variable `AI_PROVIDER=deepseek`, and `AI_MODEL` with an available model (for example `deepseek-flash`). Leave `AI_BASE_URL` unset to use `https://api.deepseek.com`. The adapter uses the [documented JSON Output mode](https://api-docs.deepseek.com/guides/json_mode/).
 
@@ -179,6 +181,7 @@ Each Markdown file in the root `review-rules/` directory defines one rule. Files
 
 | Category                 | What to check                                                                                                                                       | Rules                                                                                                                                                                                          |
 | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PR linkage               | Does the PR description link the issue that motivates the change?                                                                                   | [PR issue link](review-rules/pr-issue-link.md)                                                                                                                                                 |
 | Contribution and thesis  | Does the author add an original insight, and does the article develop one main conclusion?                                                          | [Original contribution](review-rules/original-contribution.md), [Single conclusion](review-rules/single-conclusion.md)                                                                         |
 | Structure and order      | Do the first three paragraphs establish the topic, do sections give the overall idea before the details, and does each paragraph advance one point? | [Opening](review-rules/opening.md), [Overall idea first](review-rules/high-level-idea.md), [Paragraph intent](review-rules/paragraph-intent.md)                                                |
 | Language and notation    | Are terms consistent, are formulas and symbols used where they help, and are claims and limits stated directly?                                     | [Terminology](review-rules/terminology.md), [Notation](review-rules/notation.md), [Direct writing](review-rules/direct-writing.md), [Academic expression](review-rules/academic-expression.md) |
