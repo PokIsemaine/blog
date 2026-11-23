@@ -102,7 +102,7 @@ These IDs are public, not credentials. The widget uses **specific** mapping with
 - Set Actions **variable** `AI_MODEL` to a model supported by your chosen provider.
 - Optional `AI_PROVIDER`: `openai-compatible` (default), `deepseek`, or `anthropic`.
 - Optional `AI_BASE_URL`: HTTPS API prefix such as `https://api.openai.com/v1`, an OpenAI-compatible provider's endpoint, or `https://api.anthropic.com/v1`.
-- Permit the workflow's `issues: write` permission for its single PR conversation comment. No personal access token is required.
+- Permit the workflow's `issues: write` and `pull-requests: write` permissions for its single PR conversation comment. No personal access token is required.
 
 Every reviewed PR must link an issue in its description. The workflow reads the PR body from the event and accepts `#123`, `owner/repo#123`, or a full GitHub issue URL outside fenced code, inline code and HTML comments. A missing or empty description returns `reject` with `review-rules/pr-issue-link.md` before content review; editing the description reruns the check. This is a deterministic check inside the advisory workflow, so it adds no required branch-protection status and remains skipped for fork and Dependabot PRs. Local runs without `PR_BODY` skip the check.
 

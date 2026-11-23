@@ -15,6 +15,7 @@ jobs:
     permissions:
       contents: read
       issues: write
+      pull-requests: write
     steps:
       # Execute reviewer code from the trusted base, never the PR checkout.
       - uses: actions/checkout@v4
