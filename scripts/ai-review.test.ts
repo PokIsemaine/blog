@@ -134,12 +134,20 @@ test("AI review uses scoped context, retries transient errors, redacts keys and 
 let calls=0;
 globalThis.fetch=async (url,init)=>{
  if(url.includes('/chat/completions')){
+  if(process.env.GITHUB_FAILURE==='model')return new Response('secret model body',{status:401});
   calls++;if(calls===1)return new Response('',{status:429,headers:{'retry-after':'0.001'}});
   if(process.env.AI_PROVIDER==='deepseek' && url!=='https://api.deepseek.com/chat/completions')throw Error('Wrong DeepSeek endpoint');
   writeFileSync('context.json',init.body);
   return Response.json({choices:[{message:{content:JSON.stringify(process.env.INVALID_RESPONSE ? {结论:'approve',建议:'invalid'} : {结论:'reject',建议:[(process.env.INVALID_RULE==='missing' ? 'review-rules/missing.md' : 'review-rules/correctness.md')+'：'+(process.env.INVALID_RULE==='empty'?'':'content/blog/post/en.mdx:1 Leak '+process.env.AI_API_KEY+' Clarify the claim.')]})}}]});
  }
- if(init.method==='PATCH'){writeFileSync('posted.json',init.body);return Response.json({});}
+ if(process.env.GITHUB_FAILURE==='network')throw Error(process.env.GITHUB_TOKEN+' '+process.env.AI_API_KEY+' private article');
+ if(process.env.GITHUB_FAILURE==='query')return new Response('github secret response body',{status:503,headers:{'x-github-request-id':'query-request-123','retry-after':'0.001'}});
+ if(process.env.GITHUB_FAILURE==='malformed')return new Response('private article',{status:200});
+ if(init.method==='PATCH' || init.method==='POST'){
+  if(['publish','create'].includes(process.env.GITHUB_FAILURE))return new Response('github publish response body',{status:403,headers:{'x-github-request-id':'publish-request-456'}});
+  writeFileSync('posted.json',init.body);return Response.json({});
+ }
+ if(process.env.GITHUB_FAILURE==='create')return Response.json([]);
  return Response.json([{id:42,user:{login:'github-actions[bot]'},body:'<!-- systems-notebook-ai-review --> old'}]);
 };`,
     );
@@ -219,6 +227,7 @@ globalThis.fetch=async (url,init)=>{
         "unavailable",
       ),
     );
+    assert.match(result.stderr, /response validation/);
     for (const invalid of ["missing", "empty"]) {
       result = spawnSync(
         process.execPath,
@@ -245,6 +254,68 @@ globalThis.fetch=async (url,init)=>{
       1,
       "Reject skills outside the trusted checkout",
     );
+    await writeFile(join(dir, ".github/ai-review.json"), "{}");
+    for (const failure of [
+      "query",
+      "publish",
+      "create",
+      "network",
+      "model",
+      "malformed",
+    ] as const) {
+      await writeFile(join(dir, "summary.md"), "");
+      result = spawnSync(
+        process.execPath,
+        ["--import", tsx, "--import", pathToFileURL(mock).href, runner],
+        {
+          cwd: dir,
+          env: {
+            ...env,
+            GITHUB_FAILURE: failure,
+            AI_API_KEY: "github-secret-key",
+          },
+          encoding: "utf8",
+        },
+      );
+      assert.equal(result.status, 1, `Report GitHub ${failure} failure`);
+      const operation = {
+        query: "GitHub query comments",
+        publish: "GitHub update comment",
+        create: "GitHub create comment",
+        network: "GitHub query comments",
+        model: "model request",
+        malformed: "GitHub query comments response validation",
+      }[failure];
+      assert.match(result.stderr, new RegExp(`stage=${operation}`));
+      if (failure === "network")
+        assert.match(result.stderr, /category=network_error/);
+      else
+        assert.match(
+          result.stderr,
+          new RegExp(
+            `status=${{ query: 503, publish: 403, create: 403, model: 401, malformed: 200 }[failure]}`,
+          ),
+        );
+      if (["query", "publish", "create"].includes(failure))
+        assert.match(
+          result.stderr,
+          /request_id=(query-request-123|publish-request-456)/,
+        );
+      assert.doesNotMatch(
+        result.stdout + result.stderr,
+        /github-secret-key|fake-github|github secret response body|github publish response body|secret model body|private article|Clarify the claim/,
+      );
+      const summary = await readFile(join(dir, "summary.md"), "utf8");
+      if (failure !== "model") {
+        assert.match(summary, /Advisory AI review/);
+        assert.match(summary, /comment publication failed/);
+        assert.doesNotMatch(summary, /AI review unavailable/);
+        assert.match(
+          await readFile(join(dir, "ai-review.md"), "utf8"),
+          /Clarify the claim/,
+        );
+      }
+    }
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
