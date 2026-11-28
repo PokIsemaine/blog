@@ -28,6 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${a.title} | Systems Notebook`,
     description: a.description,
+    robots: a.status === "draft" ? { index: false, follow: false } : undefined,
     alternates: { canonical: absolute(articleUrl(lang, slug)), languages },
   };
 }
@@ -46,6 +47,13 @@ export default async function Article({ params }: Props) {
       <p className="eyebrow">
         {a.tags.join(" / ")} · {a.date}
       </p>
+      {a.status === "draft" && (
+        <p className="draft-preview">
+          {lang === "zh"
+            ? "草稿预览 · 尚未发布"
+            : "Draft preview · Not published"}
+        </p>
+      )}
       <h1>{a.title}</h1>
       <p className="lead">{a.description}</p>
       <div className="language">
@@ -69,7 +77,9 @@ export default async function Article({ params }: Props) {
           >
             {lang === "zh" ? "在 GitHub 上编辑" : "Edit on GitHub"}
           </EditOnGitHub>
-          <Comments articleId={slug} lang={lang} />
+          {a.status === "published" && (
+            <Comments articleId={slug} lang={lang} />
+          )}
         </DocsBody>
       </ArticleTOC>
     </article>

@@ -13,6 +13,8 @@ npm run dev
 
 Open http://localhost:3000/en/. For local environment configuration, copy `.env.example` to `.env.local`. Next loads `.env.local`; standalone `tsx` validation/export/review scripts use shell environment variables, so export matching values before testing a configured build. Never commit credentials.
 
+During local development, `npm run dev` also renders drafts at their normal article URLs, such as http://localhost:3000/zh/blog/example-slug/. Draft pages and list entries are visibly marked as unpublished. Production builds still omit drafts from routes, lists, search and alternate metadata.
+
 ```sh
 npm run format:check
 npm run lint
@@ -47,7 +49,7 @@ The default authoring sequence is:
 2. Pass the topic-quality gate before choosing a stable slug or drafting. A topic must add an original contribution beyond summarizing existing material. It must also produce information gain: readers should be able to make a technical decision under stated constraints or gain a new, evidence-backed conclusion. The gate is binary: both checks must pass. If either fails, refine the question or gather evidence instead of drafting.
 3. Confirm the stable slug, audience, one main conclusion, evidence, and scope before drafting.
 4. Create only `content/blog/<stable-id>/zh.mdx` with `lang: zh` and `status: draft`.
-5. Run the validation checks and get author feedback on the Chinese draft.
+5. Run the validation checks, open the rendered draft in the local site, and get author feedback on the Chinese draft.
 6. After the Chinese draft is settled, create `en.mdx` with the same slug and translate by meaning.
 7. Publish only with explicit approval.
 
@@ -75,7 +77,7 @@ import { IndexDemo } from "@/components/interactive/index-demo";
 
 The example shows the default Chinese draft. For `en.mdx`, keep the same metadata shape with `lang: en` and English `title` and `description`.
 
-All metadata fields above except tags are required; date must be a quoted, valid ISO calendar date. Slug and language must match directory and filename. `status: draft` excludes a document from public routes, lists and alternate metadata. Dates are editorial dates, not a scheduling mechanism. Drafts still must compile and have valid metadata. Drafts are **not a confidentiality boundary**: keep confidential writing outside a public repository.
+All metadata fields above except tags are required; date must be a quoted, valid ISO calendar date. Slug and language must match directory and filename. `status: draft` excludes a document from production routes, lists, search and alternate metadata, but local development renders it for review. Dates are editorial dates, not a scheduling mechanism. Drafts still must compile and have valid metadata. Drafts are **not a confidentiality boundary**: keep confidential writing outside a public repository.
 
 Use `##` and `###` headings for the generated table of contents; the page template supplies the article title. Fumadocs provides heading IDs and Shiki code highlighting. Put browser interaction in `src/components/interactive/` with `'use client'`, and reusable deterministic calculations in separate `.ts` modules. Components can render SVG diagrams, canvas plots or browser-only demonstrations without a backend. Add explicit component imports to MDX rather than putting implementations in articles.
 

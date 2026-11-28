@@ -51,6 +51,8 @@ export default async function Index({
           .map((a) => (
             <Link className="card" href={articleUrl(lang, a.slug)} key={a.slug}>
               <small>
+                {a.status === "draft" &&
+                  (lang === "zh" ? "草稿 · " : "Draft · ")}
                 {a.tags.join(" / ")} · {a.date}
               </small>
               <h2>{a.title} ↗</h2>
