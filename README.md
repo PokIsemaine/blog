@@ -44,11 +44,12 @@ The public site is English-first, but new articles start with **one Chinese draf
 The default authoring sequence is:
 
 1. Read this section, the TL;DR and authoring-feature sections below, and every rule in `review-rules/`. Check an existing article for frontmatter and MDX conventions.
-2. Confirm the stable slug, audience, one main conclusion, evidence, and scope before drafting.
-3. Create only `content/blog/<stable-id>/zh.mdx` with `lang: zh` and `status: draft`.
-4. Run the validation checks and get author feedback on the Chinese draft.
-5. After the Chinese draft is settled, create `en.mdx` with the same slug and translate by meaning.
-6. Publish only with explicit approval.
+2. Pass the topic-quality gate before choosing a stable slug or drafting. A topic must add an original contribution beyond summarizing existing material. It must also produce information gain: readers should be able to make a technical decision under stated constraints or gain a new, evidence-backed conclusion. The gate is binary: both checks must pass. If either fails, refine the question or gather evidence instead of drafting.
+3. Confirm the stable slug, audience, one main conclusion, evidence, and scope before drafting.
+4. Create only `content/blog/<stable-id>/zh.mdx` with `lang: zh` and `status: draft`.
+5. Run the validation checks and get author feedback on the Chinese draft.
+6. After the Chinese draft is settled, create `en.mdx` with the same slug and translate by meaning.
+7. Publish only with explicit approval.
 
 Do not create Chinese and English drafts in one pass. If the author explicitly asks for English-first drafting, follow that request.
 
@@ -206,7 +207,7 @@ Each Markdown file in the root `review-rules/` directory defines one rule. Files
 | Category                 | What to check                                                                                                                                       | Rules                                                                                                                                                                                          |
 | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | PR linkage               | Does the PR description link the issue that motivates the change?                                                                                   | [PR issue link](review-rules/pr-issue-link.md)                                                                                                                                                 |
-| Contribution and thesis  | Does the author add an original insight, and does the article develop one main conclusion?                                                          | [Original contribution](review-rules/original-contribution.md), [Single conclusion](review-rules/single-conclusion.md)                                                                         |
+| Contribution and thesis  | Does the article pass the topic-quality gate by adding an original contribution and information gain, and does it develop one main conclusion?      | [Original contribution](review-rules/original-contribution.md), [Single conclusion](review-rules/single-conclusion.md)                                                                         |
 | Summary and abstract     | Does the TLDR state the problem, gap, insight, contribution, and evidence without relying on undefined concepts, within 120 semantic units?         | [Summary](review-rules/summary.md)                                                                                                                                                             |
 | Structure and order      | Do the first three paragraphs establish the topic, do sections give the overall idea before the details, and does each paragraph advance one point? | [Opening](review-rules/opening.md), [Overall idea first](review-rules/high-level-idea.md), [Paragraph intent](review-rules/paragraph-intent.md)                                                |
 | Language and notation    | Are terms consistent, do formulas and symbols convey their physical meaning, and are claims and limits stated directly?                             | [Terminology](review-rules/terminology.md), [Notation](review-rules/notation.md), [Direct writing](review-rules/direct-writing.md), [Academic expression](review-rules/academic-expression.md) |

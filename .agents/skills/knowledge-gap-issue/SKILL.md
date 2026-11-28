@@ -33,6 +33,8 @@ Create an issue when at least three of these are true:
 
 If fewer than three hold, do not create an issue. Link an existing explanation when one exists, then continue the original task. Do not create speculative "maybe useful" issues.
 
+Passing the count is necessary but not sufficient. Before creating the issue, also identify the article's information gain: what technical decision readers can make under concrete constraints, or what new evidence-backed conclusion the article can support. "Systematically introduce X" alone is not enough. Record the planned contribution in the issue body.
+
 ## Same Article or Standalone Topic
 
 Before creating an issue, decide where the explanation belongs:
@@ -83,6 +85,11 @@ When the concept is only a supporting detail, put a short explanation or TODO in
    <2-3 sentences: what problem it addresses, what decisions or systems it affects,
    why a short inline answer is insufficient, and why a subsection in the current
    article cannot cover it.>
+
+   ## 信息增量
+
+   - 读者读完后能做出的技术判断：<decision under concrete constraints, or a new evidence-backed conclusion>
+   - 计划提供的原创依据：<experiment, source-code cross-check, failure case, benchmark, or analysis not covered by existing material>
 
    ## 与当前文章的关系
 
