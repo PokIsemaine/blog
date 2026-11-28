@@ -151,7 +151,7 @@ The webpack build is explicit. On the tested Windows export, Next's client-route
 - `src/components/interactive/`: browser demos and reusable models.
 - `scripts/`: content/export validation, tests, AI review.
 - `.github/workflows/`: deterministic CI, advisory review, Pages deployment.
-- `.agents/skills/`: repository-scoped Codex workflows, including blog drafting and knowledge-gap issue capture.
+- `.agents/skills/`: repository-scoped Codex workflows, including blog drafting, interactive experiment figures, and knowledge-gap issue capture.
 
 See `VERIFICATION.md` for the checks performed and external setup still outstanding.
 
